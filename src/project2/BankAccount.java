@@ -1,6 +1,13 @@
 package project2;
-
+import java.util.exception.*;
 import java.util.ArrayList;
+
+// Custom Exception class
+class InsufficientBalanceException extends Exception {
+    public InsufficientBalanceException(String message) {
+        super(message);
+    }
+}
 
 class Account {
     int accountNumber;
@@ -27,8 +34,7 @@ public class BankAccount {
 
     // Add account
     public void addAccount(int accountNumber, String holderName, double balance) {
-        Account a = new Account(accountNumber, holderName, balance);
-        accounts.add(a);
+        accounts.add(new Account(accountNumber, holderName, balance));
         System.out.println("Account created for: " + holderName);
     }
 
@@ -44,16 +50,17 @@ public class BankAccount {
         System.out.println("Account not found.");
     }
 
-    // Withdraw money
-    public void withdraw(int accountNumber, double amount) {
+    // Withdraw money - uses custom exception
+    public void withdraw(int accountNumber, double amount) throws InsufficientBalanceException {
         for (Account a : accounts) {
             if (a.accountNumber == accountNumber) {
                 if (a.balance < amount) {
-                    System.out.println("Insufficient balance!");
-                } else {
-                    a.balance -= amount;
-                    System.out.println("Withdrawn ₹" + amount + " from " + a.holderName);
+                    throw new InsufficientBalanceException(
+                        "Insufficient balance! Available: ₹" + a.balance + ", Requested: ₹" + amount
+                    );
                 }
+                a.balance -= amount;
+                System.out.println("Withdrawn ₹" + amount + " from " + a.holderName);
                 return;
             }
         }
@@ -77,8 +84,15 @@ public class BankAccount {
         bank.displayAll();
 
         bank.deposit(1001, 2000);
-        bank.withdraw(1002, 1000);
-        bank.withdraw(1002, 9000);
+
+        try {
+            bank.withdraw(1002, 1000);  // This will work
+            bank.withdraw(1002, 9000);  // This will throw exception
+        } catch (InsufficientBalanceException e) {
+            System.out.println("Transaction failed: " + e.getMessage());
+        } finally {
+            System.out.println("Transaction process completed.");
+        }
 
         bank.displayAll();
     }
