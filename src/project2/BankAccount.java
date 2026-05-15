@@ -77,6 +77,11 @@ public class BankAccount {
 
     // Deposit money
     public void deposit(int accountNumber, double amount) {
+    if (!isValidAmount(amount)) {
+        System.out.println("Invalid amount! Deposit amount must be greater than zero.");
+        return;
+    }
+    // rest of existing code stays same
         String query = "UPDATE accounts SET balance = balance + ? WHERE account_number = ?";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
@@ -94,8 +99,13 @@ public class BankAccount {
     }
 
     // Withdraw money
-    public void withdraw(int accountNumber, double amount) 
+    public void withdraw(int accountNumber, double amount)
         throws InsufficientBalanceException {
+    if (!isValidAmount(amount)) {
+        System.out.println("Invalid amount! Withdrawal amount must be greater than zero.");
+        return;
+    }
+    // rest of existing code stays same
         String checkQuery = "SELECT balance FROM accounts WHERE account_number = ?";
         String updateQuery = "UPDATE accounts SET balance = balance - ? WHERE account_number = ?";
         try (Connection conn = getConnection();
@@ -122,7 +132,11 @@ public class BankAccount {
         } catch (SQLException e) {
             System.out.println("Error withdrawing: " + e.getMessage());
         }
+        
     }
+    public boolean isValidAmount(double amount) {
+    return amount > 0;
+}
 
     public static void main(String[] args) {
         BankAccount bank = new BankAccount();
