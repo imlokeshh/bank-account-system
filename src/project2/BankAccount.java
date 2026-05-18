@@ -136,6 +136,34 @@ public class BankAccount {
     }
     public boolean isValidAmount(double amount) {
     return amount > 0;
+    
+}
+public void transfer(int fromAccount, int toAccount, double amount) throws InsufficientBalanceException {
+    
+    if (!isValidAmount(amount)) {
+        System.out.println("Invalid amount!");
+        return;
+    }
+    
+    // Step 1: Check if toAccount exists
+    String checkQuery = "SELECT balance FROM accounts WHERE account_number = ?";
+    try (Connection conn = getConnection();
+         PreparedStatement checkPs = conn.prepareStatement(checkQuery)) {
+        checkPs.setInt(1, toAccount);
+        ResultSet rs = checkPs.executeQuery();
+        
+        if (rs.next()) {
+            // Step 2: Withdraw from source (throws InsufficientBalanceException if low balance)
+            withdraw(fromAccount, amount);
+            // Step 3: Deposit to target
+            deposit(toAccount, amount);
+            System.out.println("Transferred Rs." + amount + " successfully!");
+        } else {
+            System.out.println("Target account not found.");
+        }
+    } catch (SQLException e) {
+        System.out.println("Error: " + e.getMessage());
+    }
 }
 
     public static void main(String[] args) {
@@ -149,7 +177,9 @@ public class BankAccount {
             System.out.println("2. Display All Accounts");
             System.out.println("3. Deposit Money");
             System.out.println("4. Withdraw Money");
+            System.out.println("6. Transfer Money");
             System.out.println("5. Exit");
+            
             System.out.print("Enter your choice: ");
             choice = scanner.nextInt();
 
@@ -190,6 +220,19 @@ public class BankAccount {
 
                 case 5:
                     System.out.println("Thank you for using Bank Account System!");
+                    break;
+                case 6:
+                    System.out.print("Enter Source Account Number: ");
+                    int fromAcc = scanner.nextInt();
+                    System.out.print("Enter Target Account Number: ");
+                    int toAcc = scanner.nextInt();
+                    System.out.print("Enter Amount to Transfer: ");
+                    double transAmount = scanner.nextDouble();
+                    try {
+                        bank.transfer(fromAcc, toAcc, transAmount);
+                    } catch (InsufficientBalanceException e) {
+                        System.out.println("Transfer failed: " + e.getMessage());
+                    }
                     break;
 
                 default:
