@@ -1,7 +1,7 @@
 package project2;
-import java.util.Scanner;
+import java.util.*;
 import java.sql.*;
-import java.util.ArrayList;
+
 
 // Custom Exception
 class InsufficientBalanceException extends Exception {
@@ -64,11 +64,24 @@ public class BankAccount {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(query)) {
             System.out.println("===== All Accounts =====");
+            List<Account> accounts = new ArrayList<>();
             while (rs.next()) {
-                System.out.println("Account No: " + rs.getInt("account_number"));
-                System.out.println("Holder: " + rs.getString("holder_name"));
-                System.out.println("Balance: Rs." + rs.getDouble("balance"));
-                System.out.println("-------------------");
+                accounts.add(new Account(
+                    rs.getInt("account_number"),
+                    rs.getString("holder_name"),
+                    rs.getDouble("balance")
+                ));
+            }
+         Collections.sort(accounts, new Comparator<Account>() {
+            @Override
+            public int compare(Account a1, Account a2) {
+            if(a2.balance > a1.balance) return 1;
+            if(a2.balance < a1.balance) return -1;
+            return 0;
+       }
+        });
+            for (Account account : accounts) {
+                account.displayInfo();
             }
         } catch (SQLException e) {
             System.out.println("Error displaying accounts: " + e.getMessage());
@@ -81,7 +94,6 @@ public class BankAccount {
         System.out.println("Invalid amount! Deposit amount must be greater than zero.");
         return;
     }
-    // rest of existing code stays same
         String query = "UPDATE accounts SET balance = balance + ? WHERE account_number = ?";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
@@ -105,7 +117,6 @@ public class BankAccount {
         System.out.println("Invalid amount! Withdrawal amount must be greater than zero.");
         return;
     }
-    // rest of existing code stays same
         String checkQuery = "SELECT balance FROM accounts WHERE account_number = ?";
         String updateQuery = "UPDATE accounts SET balance = balance - ? WHERE account_number = ?";
         try (Connection conn = getConnection();
